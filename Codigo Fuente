@@ -1,0 +1,212 @@
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Random;
+
+public class Rover {
+
+    private String nombrePropio;
+    private double potenciaInicial;
+    private double potenciaDisponible;
+    private int posicionInicialX;
+    private int posicionInicialY;
+    private int posicionActualX;
+    private int posicionActualY;
+    private int cantidadRecargasRealizadas;
+    private int cantidadPosiblesDeteccionesCalor;
+    private ArrayList<ArrayList<String>> mandatosExitosos;
+    private ArrayList<ArrayList<String>> mandatosFallidos;
+    private double costoMovimiento;
+    private double costoDeteccion;
+    private int recargasMaximas;
+    private String codigoRover;
+
+    private static int cantidadRoversCreados = 0;
+    private static ArrayList<String> informacionRoversCreados = new ArrayList<String>();
+
+    public Rover(String nombrePropioP) {
+        this(nombrePropioP, 100.0);
+    }
+
+    public Rover(String nombrePropioP, double potenciaP) {
+        nombrePropio = nombrePropioP;
+        potenciaInicial = potenciaP;
+        potenciaDisponible = potenciaP;
+
+        posicionInicialX = 0;
+        posicionInicialY = 0;
+        posicionActualX = 0;
+        posicionActualY = 0;
+
+        cantidadRecargasRealizadas = 0;
+        cantidadPosiblesDeteccionesCalor = 0;
+
+        mandatosExitosos = new ArrayList<ArrayList<String>>();
+        mandatosFallidos = new ArrayList<ArrayList<String>>();
+
+        costoMovimiento = 0.50;
+        costoDeteccion = 0.25;
+        recargasMaximas = 5;
+
+        codigoRover = "RVR-" + (System.currentTimeMillis() % 100000);
+
+        cantidadRoversCreados++;
+        informacionRoversCreados.add("Código: " + codigoRover + " | Nombre: " + nombrePropio);
+    }
+
+    public void moverAdelante() {
+        if (validarPotenciaActual()) {
+            if (!detectarFuga()) {
+                posicionActualY++;
+                potenciaDisponible -= costoMovimiento;
+                registrarMandato("Desplazamiento Adelante", "Posible");
+            } else {
+                registrarMandato("Desplazamiento Adelante", "No posible: fuga detectada");
+            }
+        } else {
+            registrarMandato("Desplazamiento Adelante", "No posible: potencia insuficiente");
+        }
+    }
+
+    public void moverAtras() {
+        if (validarPotenciaActual()) {
+            if (!detectarFuga()) {
+                posicionActualY--;
+                potenciaDisponible -= costoMovimiento;
+                registrarMandato("Desplazamiento Atrás", "Posible");
+            } else {
+                registrarMandato("Desplazamiento Atrás", "No posible: fuga detectada");
+            }
+        } else {
+            registrarMandato("Desplazamiento Atrás", "No posible: potencia insuficiente");
+        }
+    }
+
+    public void moverDerecha() {
+        if (validarPotenciaActual()) {
+            if (!detectarFuga()) {
+                posicionActualX++;
+                potenciaDisponible -= costoMovimiento;
+                registrarMandato("Desplazamiento Derecha", "Posible");
+            } else {
+                registrarMandato("Desplazamiento Derecha", "No posible: fuga detectada");
+            }
+        } else {
+            registrarMandato("Desplazamiento Derecha", "No posible: potencia insuficiente");
+        }
+    }
+
+    public void moverIzquierda() {
+        if (validarPotenciaActual()) {
+            if (!detectarFuga()) {
+                posicionActualX--;
+                potenciaDisponible -= costoMovimiento;
+                registrarMandato("Desplazamiento Izquierda", "Posible");
+            } else {
+                registrarMandato("Desplazamiento Izquierda", "No posible: fuga detectada");
+            }
+        } else {
+            registrarMandato("Desplazamiento Izquierda", "No posible: potencia insuficiente");
+        }
+    }
+
+    public String consultarPosicionActual() {
+        return "(" + posicionActualX + "," + posicionActualY + ")";
+    }
+
+    public double getPotenciaDisponible() {
+        return potenciaDisponible;
+    }
+
+    public void recargarUnidadesPotencia(double potenciaP) {
+        if (validarRecarga()) {
+            potenciaDisponible += potenciaP;
+            cantidadRecargasRealizadas++;
+            registrarMandato("Recarga de potencia", "Posible");
+        } else {
+            registrarMandato("Recarga de potencia", "No posible: límite de recargas alcanzado");
+        }
+    }
+
+    public String toString() {
+        String mensaje = "";
+
+        mensaje += "===== ESTADO DEL ROVER =====\n";
+        mensaje += "Código del Rover: " + codigoRover + "\n";
+        mensaje += "Nombre propio: " + nombrePropio + "\n";
+        mensaje += "Potencia inicial: " + potenciaInicial + "\n";
+        mensaje += "Potencia disponible: " + potenciaDisponible + "\n";
+        mensaje += "Cantidad de recargas realizadas: " + cantidadRecargasRealizadas + "\n";
+        mensaje += "Cantidad de recargas disponibles: " + (recargasMaximas - cantidadRecargasRealizadas) + "\n";
+        mensaje += "Cantidad de posibles detecciones de calor: " + cantidadPosiblesDeteccionesCalor + "\n";
+        mensaje += "Posición inicial: (" + posicionInicialX + "," + posicionInicialY + ")\n";
+        mensaje += "Posición actual: (" + posicionActualX + "," + posicionActualY + ")\n";
+
+        mensaje += "\n--- Mandatos exitosos ---\n";
+        for (int i = 0; i < mandatosExitosos.size(); i++) {
+            mensaje += mandatosExitosos.get(i).get(0) + " | "
+                    + mandatosExitosos.get(i).get(1) + " | "
+                    + mandatosExitosos.get(i).get(2) + "\n";
+        }
+
+        mensaje += "\n--- Mandatos fallidos ---\n";
+        for (int i = 0; i < mandatosFallidos.size(); i++) {
+            mensaje += mandatosFallidos.get(i).get(0) + " | "
+                    + mandatosFallidos.get(i).get(1) + " | "
+                    + mandatosFallidos.get(i).get(2) + "\n";
+        }
+
+        return mensaje;
+    }
+
+    public static int getCantidadRoversCreados() {
+        return cantidadRoversCreados;
+    }
+
+    public static String getInformacionRoversCreados() {
+        String mensaje = "";
+        for (int i = 0; i < informacionRoversCreados.size(); i++) {
+            mensaje += informacionRoversCreados.get(i) + "\n";
+        }
+        return mensaje;
+    }
+
+    private boolean detectarFuga() {
+        Random random = new Random();
+        double numeroAleatorio = random.nextDouble();
+
+        cantidadPosiblesDeteccionesCalor++;
+        potenciaDisponible -= costoDeteccion;
+
+        return numeroAleatorio >= 0.5;
+    }
+
+    private boolean validarPotenciaActual() {
+        return potenciaDisponible >= (costoMovimiento + costoDeteccion);
+    }
+
+    private boolean validarRecarga() {
+        return cantidadRecargasRealizadas < recargasMaximas;
+    }
+
+    private String determinarFechaHoraActual() {
+        Date fechaActual = new Date();
+        DateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        return formato.format(fechaActual);
+    }
+
+    private void registrarMandato(String tipoMandatoP, String estatusMandatoP) {
+        ArrayList<String> mandato = new ArrayList<String>();
+
+        mandato.add(determinarFechaHoraActual());
+        mandato.add(tipoMandatoP);
+        mandato.add(estatusMandatoP);
+
+        if (estatusMandatoP.equals("Posible")) {
+            mandatosExitosos.add(mandato);
+        } else {
+            mandatosFallidos.add(mandato);
+        }
+    }
+}
